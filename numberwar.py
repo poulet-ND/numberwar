@@ -16,7 +16,7 @@ clock = pygame.time.Clock()
 fps = 100 # 50 or 100 works good 25 was more tiring
 motion_speed = start_motion_speed
 motion = motion_speed * 25/fps//1 # it's adapt the speed to the fps
-ennemy_size = lambda prop, start_num: log(prop)/start_num//1
+ennemy_size = lambda prop, start_num: log(prop)/start_num//1 if prop > 0 and start_num > 0 else 0
 
 other_pos = 0
 people_pos = 400
@@ -162,7 +162,7 @@ def endchalenge():
         elif ennemy_num <= 0:# the ennemy lost
             game_over(True)
         # ennemy is attacking
-        if ennemy_pos < 530:# ennemy is coming dangerously down
+        if ennemy_pos < 550 - ennemy_size(ennemy_num/20, 1.1)*20:# ennemy is coming dangerously down
             ennemy_pos += start_motion_speed * 25/fps//1
 
             
@@ -276,5 +276,6 @@ while running:
     pygame.display.update()
     clock.tick(fps)
     window.fill((0,0,0))# clear all
+
 
 pygame.quit()
