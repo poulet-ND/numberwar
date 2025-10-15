@@ -9,15 +9,16 @@ pygame.init()
 people_num = 10
 bonus = ['+0','+0']
 malus = ['-0','-0']
-start_motion_speed = 5
+start_motion_speed = 10
 
 # technic information
 clock = pygame.time.Clock()
 fps = 100 # 50 or 100 works good 25 was more tiring
 motion_speed = start_motion_speed
 motion = motion_speed * 25/fps//1 # it's adapt the speed to the fps
-ennemy_size = lambda prop, start_num: log(prop)/start_num//1 if prop > 0 and start_num > 0 else 0
+ennemy_size = lambda prop, start_num: log(prop)/0.5//1 if prop > 0 and start_num > 0 else 0
 
+lost = False
 other_pos = 0
 people_pos = 400
 now_option = 0
@@ -26,7 +27,7 @@ go_to = 0
 options_list = []
 possible_num = people_num
 
-generalfont = pygame.font.SysFont('lucida fax',19)
+generalfont = pygame.font.SysFont('lucida fax',30)
 
 # loops
 
@@ -79,7 +80,7 @@ def create_the_options_list(max_positive_between_negative_options,max_options_nu
             common_divisors = find_the_common_divisor(possible_num)
             option_label = ''
             if len(common_divisors):# the option will be '/' or '-'
-                option_label += choice(['/','-'])
+                option_label += choice(['//','-'])
                 option_label += str(choice(common_divisors))
             else:# option will be '-'
                 option_label += '-'
@@ -99,18 +100,22 @@ def next_option(people_position):
     global option_pos
     global motion_speed
     global motion
+    global lost
 
     # accelerate a litle bit
-    motion_speed += 1
+    motion_speed += 0.5 # need to be inplemented
     motion = motion_speed * 25/fps//1
 
     if people_position <= 400:# receive the first option
         people_num = eval(str(people_num) + options_list[now_option][0])
     else:# receive the second option
         people_num = int(eval(str(people_num) + options_list[now_option][1]))
+        
+    if people_num < 0:
+        people_num = 0
 
-    if people_num <= 0:# you lost
-        game_over(False)
+    if people_num == 0:# you lost
+        lost = True
 
     if now_option < len(options_list)-1:# pass to a new option
         # pass to the next option
@@ -150,7 +155,7 @@ def endchalenge():
         
         # seize 
         # create the ennemy
-        show_one_people_or_option(400,ennemy_pos,150,ennemy_size(ennemy_num/20, 1.1)+20,(255,0,0), str(ennemy_num))
+        show_one_people_or_option(400,ennemy_pos,150,ennemy_size(ennemy_num, 1.1)+20,(255,0,0), str(ennemy_num))
         # create the people
         show_one_people_or_option(400,550,150,ennemy_size(possible_num/20,1.1)+20,(0,0,255),str(people_num))
 
@@ -162,7 +167,7 @@ def endchalenge():
         elif ennemy_num <= 0:# the ennemy lost
             game_over(True)
         # ennemy is attacking
-        if ennemy_pos < 550 - ennemy_size(ennemy_num/20, 1.1)*20:# ennemy is coming dangerously down
+        if ennemy_pos < 550 - ennemy_size(ennemy_num, 1.1)-20:# ennemy is coming dangerously down
             ennemy_pos += start_motion_speed * 25/fps//1
 
             
@@ -174,7 +179,7 @@ def endchalenge():
             ennemy_num -= removal
             people_num -= removal
 
-            ennemy_pos = 550 - ennemy_size(ennemy_num/20, 1.1)*20
+            ennemy_pos = 550 - ennemy_size(ennemy_num, 1.1)-20
 
             clock.tick(fps)
 
@@ -183,47 +188,48 @@ def endchalenge():
         pygame.display.update()
 
         # clear all
-        window.fill((0,0,0))
+        window.fill((255, 228, 181))
     
     pygame.quit()
 
 def game_over(iswin):
     bigfont = pygame.font.SysFont('lucida fax',50)
     if iswin:
-        win_surface = bigfont.render('You won !!!',True,(255,255,0))
+        win_surface = bigfont.render('You won !!!',True,(0, 210, 0))
         win_rect = win_surface.get_rect()
         win_rect.midtop = (400,300)
 
         window.blit(win_surface,win_rect)
 
         pygame.display.update()
-        sleep(1.5)
+        sleep(3)
         pygame.quit()
         exit(0)
     else:
-        lose_surface = bigfont.render('You\'re a loser !!',True,(255,255,0))
+        lose_surface = bigfont.render('You\'re a loser !!',True,(255,0,0))
         lose_rect = lose_surface.get_rect()
         lose_rect.midtop = 400,300
 
         window.blit(lose_surface,lose_rect)
 
-        no_people_surface = bigfont.render('0 people in your army',True,(255,255,0))
+        no_people_surface = bigfont.render('0 people in your army',True,(255,0,0))
         no_people_rect = lose_surface.get_rect()
         no_people_rect.midtop = 400,400
 
         window.blit(no_people_surface,no_people_rect)
 
         pygame.display.update()
-        sleep(1.5)
+        sleep(3)
         pygame.quit()
         exit(0)
 
 def show_one_people_or_option(position_x,position_y,width,height,color,text):
 
     # the colored rectangle
-    pygame.draw.rect(window,color,pygame.Rect(position_x - (width//2),position_y,width,height))
+    pygame.draw.rect(window,color,pygame.Rect(position_x - (width//2),position_y,width,height), border_radius = 4)
     # the text of the entity
-    entity_text_label = generalfont.render(text,True,(255,255,255))
+    new_text = text.replace("*", "x").replace("//","/")
+    entity_text_label = generalfont.render(new_text,True,(255,255,255))
     entity_text_label_rect = entity_text_label.get_rect()
     entity_text_label_rect.midtop = (position_x ,position_y)
 
@@ -241,7 +247,7 @@ while running:
     for ev in pygame.event.get():
         event = ev.type
         if event == pygame.QUIT:
-            pygame.quit()
+            running = False
         if event == pygame.KEYDOWN:# a key is pressed
             if ev.key == pygame.K_LEFT:# people must go left
                 if go_to != "LEFT":
@@ -259,6 +265,10 @@ while running:
 
     # create the people
     show_one_people_or_option(people_pos,550,150,ennemy_size(people_num/20, 1.1)+20,(0,0,255),str(people_num))
+    
+    # lose
+    if lost:
+        game_over(False)
 
     # verify where the option is
     if option_pos >= 550:# an option touched the people
@@ -275,7 +285,8 @@ while running:
 
     pygame.display.update()
     clock.tick(fps)
-    window.fill((0,0,0))# clear all
+    window.fill((255, 228, 181))# clear all
 
 
 pygame.quit()
+
