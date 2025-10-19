@@ -10,13 +10,14 @@ people_num = 10
 bonus = ['+0','+0']
 malus = ['-0','-0']
 start_motion_speed = 10
+main_color = (255, 228, 181)
 
 # technic information
 clock = pygame.time.Clock()
 fps = 100 # 50 or 100 works good 25 was more tiring
 motion_speed = start_motion_speed
-motion = motion_speed * 25/fps//1 # it's adapt the speed to the fps
-ennemy_size = lambda prop, start_num: log(prop)/0.5//1 if prop > 0 and start_num > 0 else 0
+motion = int(motion_speed * 25/fps) # it's adapt the speed to the fps
+ennemy_size = lambda prop, start_num: int(-log(prop)/log(0.5) if prop > 0 else 0) + 20
 
 lost = False
 other_pos = 0
@@ -27,7 +28,7 @@ go_to = 0
 options_list = []
 possible_num = people_num
 
-generalfont = pygame.font.SysFont('lucida fax',30)
+generalfont = pygame.font.SysFont('Verdana',15, True)
 
 # loops
 
@@ -103,8 +104,8 @@ def next_option(people_position):
     global lost
 
     # accelerate a litle bit
-    motion_speed += 0.5 # need to be inplemented
-    motion = motion_speed * 25/fps//1
+    # motion_speed += 0.5 # need to be inplemented
+    # motion = motion_speed * 25/fps//1
 
     if people_position <= 400:# receive the first option
         people_num = eval(str(people_num) + options_list[now_option][0])
@@ -150,14 +151,15 @@ def endchalenge():
     while running:
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:# quit the game
-                pygame.quit()
-                exit(0)
+                running = False
         
         # seize 
         # create the ennemy
-        show_one_people_or_option(400,ennemy_pos,150,ennemy_size(ennemy_num, 1.1)+20,(255,0,0), str(ennemy_num))
+        ennemy_size_coef = ennemy_size(ennemy_num, 1.1)
+        show_one_people_or_option(400,ennemy_pos,140+ennemy_size_coef//2,ennemy_size_coef,(255,0,0), str(ennemy_num))
         # create the people
-        show_one_people_or_option(400,550,150,ennemy_size(possible_num/20,1.1)+20,(0,0,255),str(people_num))
+        people_size_coef = ennemy_size(people_num, 1.1)
+        show_one_people_or_option(400,550,140 + people_size_coef//2 ,people_size_coef,(0,0,255),str(people_num))
 
         # who won?
         if people_num == ennemy_num and people_num <= 0:# draw
@@ -167,19 +169,19 @@ def endchalenge():
         elif ennemy_num <= 0:# the ennemy lost
             game_over(True)
         # ennemy is attacking
-        if ennemy_pos < 550 - ennemy_size(ennemy_num, 1.1)-20:# ennemy is coming dangerously down
+        if ennemy_pos < 550 - ennemy_size(ennemy_num, 1.1):# ennemy is coming dangerously down
             ennemy_pos += start_motion_speed * 25/fps//1
 
             
             clock.tick(fps)
 
         else:# the battle is going
-            removal = sqrt(ennemy_num if ennemy_num<people_num else people_num)//1
+            removal = sqrt(ennemy_num if ennemy_num<people_num else people_num)
             removal = int(removal)
             ennemy_num -= removal
             people_num -= removal
 
-            ennemy_pos = 550 - ennemy_size(ennemy_num, 1.1)-20
+            ennemy_pos = 550 - ennemy_size(ennemy_num, 1.1)
 
             clock.tick(fps)
 
@@ -193,7 +195,7 @@ def endchalenge():
     pygame.quit()
 
 def game_over(iswin):
-    bigfont = pygame.font.SysFont('lucida fax',50)
+    bigfont = pygame.font.SysFont('Times New Roman',50)
     if iswin:
         win_surface = bigfont.render('You won !!!',True,(0, 210, 0))
         win_rect = win_surface.get_rect()
@@ -208,13 +210,13 @@ def game_over(iswin):
     else:
         lose_surface = bigfont.render('You\'re a loser !!',True,(255,0,0))
         lose_rect = lose_surface.get_rect()
-        lose_rect.midtop = 400,300
+        lose_rect.midtop = 400,250
 
         window.blit(lose_surface,lose_rect)
 
         no_people_surface = bigfont.render('0 people in your army',True,(255,0,0))
-        no_people_rect = lose_surface.get_rect()
-        no_people_rect.midtop = 400,400
+        no_people_rect = no_people_surface.get_rect()
+        no_people_rect.midtop = 400,350
 
         window.blit(no_people_surface,no_people_rect)
 
@@ -229,7 +231,7 @@ def show_one_people_or_option(position_x,position_y,width,height,color,text):
     pygame.draw.rect(window,color,pygame.Rect(position_x - (width//2),position_y,width,height), border_radius = 4)
     # the text of the entity
     new_text = text.replace("*", "x").replace("//","/")
-    entity_text_label = generalfont.render(new_text,True,(255,255,255))
+    entity_text_label = generalfont.render(new_text,True,main_color)
     entity_text_label_rect = entity_text_label.get_rect()
     entity_text_label_rect.midtop = (position_x ,position_y)
 
@@ -264,8 +266,9 @@ while running:
         people_pos += motion
 
     # create the people
-    show_one_people_or_option(people_pos,550,150,ennemy_size(people_num/20, 1.1)+20,(0,0,255),str(people_num))
-    
+    people_size_coef = ennemy_size(people_num, 1.1)
+    show_one_people_or_option(people_pos,550,140 + people_size_coef//2,people_size_coef,(0,0,255),str(people_num))
+
     # lose
     if lost:
         game_over(False)
@@ -285,8 +288,7 @@ while running:
 
     pygame.display.update()
     clock.tick(fps)
-    window.fill((255, 228, 181))# clear all
+    window.fill(main_color)# clear all
 
 
 pygame.quit()
-
